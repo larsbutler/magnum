@@ -1,0 +1,511 @@
+swagger: '2.0'
+produces:
+- application/json
+consumes:
+- application/json
+info:
+  title: Container-infra
+  version: '1.0'
+definitions:
+  Bay:
+    description: API representation of a bay
+    type: object
+    required:
+    - baymodel_id
+    properties:
+      uuid:
+        type: string
+        description: Unique UUID for this bay
+      name:
+        type: string
+        description: Name of this bay
+        minLength: 1
+        maxLength: 255
+      baymodel_id:
+        type: string
+        description: The baymodel UUID
+      node_count:
+        type: integer
+        description: The nocde count for this bay. Default to 1 if not set.
+        minimum: 1
+        default: 1
+      master_count:
+        type: integer
+        description: The number of master nodes for this bay. Default to 1 if not set.
+        minimum: 1
+        default: 1
+      bay_create_timeout:
+        type: integer
+        description: Timeout for creating the bay, in minutes. Default to 0 if not set.
+        minimum: 0
+        default: 0
+      stack_id:
+        type: string
+        description: ID of the Heat stack
+      status:
+        type: string
+        description: Status of the bay from the Heat stack
+        enum:
+        - CREATE_IN_PROGRESS
+        - CREATE_FAILED
+        - CREATE_COMPLETE
+        - UPDATE_IN_PROGRESS
+        - UPDATE_FAILED
+        - UPDATE_COMPLETE
+        - DELETE_IN_PROGRESS
+        - DELETE_FAILED
+        - DELETE_COMPLETE
+        - RESUME_COMPLETE
+        - RESTORE_COMPLETE
+        - ROLLBACK_COMPLETE
+        - SNAPSHOT_COMPLETE
+        - CHECK_COMPLETE
+        - ADOPT_COMPLETE
+      status_reason:
+        type: string
+        description: Status reason of the bay from the Heat stack
+      discovery_url:
+        type: string
+        description: URL used for bay node discovery
+      api_address:
+        type: string
+        description: API address of cluster master node
+      node_addresses:
+        type: array
+        description: IP addresses of cluster slave nodes
+        items:
+          type: string
+      master_addresses:
+        type: array
+        description: IP addresses of cluster master nodes
+        items:
+          type: string
+      bay_faults:
+        type: object
+        description: Fault info collected from the Heat resources of this bay
+  BayList:
+    description: List of Bays
+    type: array
+    items:
+      $ref: '#/definitions/Bay'
+  BayModel:
+    description: API representation of a baymodel
+    type: object
+    required:
+    - coe
+    - image_id
+    - keypair_id
+    properties:
+      uuid:
+        type: string
+        description: Unique UUID for this baymodel
+      name:
+        type: string
+        description: Name of the baymodel
+        minLength: 1
+        maxLength: 255
+      coe:
+        type: string
+        description: The Container Orchestration Engine for this baymodel
+        enum:
+        - kubernetes
+        - swarm
+        - mesos
+      image_id:
+        type: string
+        description: The image name or UUID to use as a base image for this baymodel
+        minLength: 1
+        maxLength: 255
+      flavor_id:
+        type: string
+        description: The flavor of this baymodel
+        minLength: 1
+        maxLength: 255
+      master_flavor_id:
+        type: string
+        description: The flavor of the master node for this baymodel
+        minLength: 1
+        maxLength: 255
+      dns_nameserver:
+        type: string
+        description: The DNS nameserver address
+      keypair_id:
+        type: string
+        description: The name or ID of the nova ssh keypair
+        minLength: 1
+        maxLength: 255
+      external_network_id:
+        type: string
+        description: The external network to attach to the bay
+        minLength: 1
+        maxLength: 255
+      fixed_network:
+        type: string
+        description: The fixed network name to attach to the bay
+        minLength: 1
+        maxLength: 255
+      network_driver:
+        type: string
+        description: The name of the driver used for instantiating container networks
+        minLength: 1
+        maxLength: 255
+      apiserver_port:
+        type: integer
+        description: The API server port for k8s
+        minimum: 1024
+        maximum: 65535
+      docker_volume_size:
+        description: The size in GB of the docker volumer
+        type: integer
+        minimum: 1
+      cluster_distro:
+        type: string
+        description: The cluster distro for the bay (e.g., coreos, fedora-atomic)
+        minLength: 1
+        maxLength: 255
+      http_proxy:
+        type: string
+        description: |
+          Address of a proxy that will receive all HTTP requests and relay them.
+          The format is a URL including a port number.
+        minLength: 1
+        maxLength: 255
+      https_proxy:
+        type: string
+        description: |
+          Address of a proxy that will receive all HTTPS requests and relay them.
+          The form is a URL including a port number.
+        minLength: 1
+        maxLength: 255
+      no_proxy:
+        type: string
+        description: |
+          A comma separated list of IPs for which proxies should not
+          be used in the bay
+        minLength: 1
+        maxLength: 255
+      volume_driver:
+        type: string
+        description: |
+          The name of the driver used for instantiating a container volume driver
+        minLength: 1
+        maxLength: 255
+      registry_enabled:
+        type: boolean
+        description: Indicates whether the docker registry is enabled
+        default: false
+      labels:
+        type: object
+        description: One or more key/value pairs
+      tls_disabled:
+        type: boolean
+        description: Indicates whether TLS should be disabled
+        default: false
+      public:
+        type: boolean
+        description: Indicates whether the baymodel is public or not
+        default: false
+      server_type:
+        type: string
+        description: Server type for this baymodel
+        minLength: 1
+        maxLength: 255
+        default: vm
+      insecure_registry:
+        type: string
+        description: Insecure registry URL when creating a baymodel
+        minLength: 1
+        maxLength: 255
+      docker_storage_driver:
+        type: string
+        description: Docker storage driver
+        enum:
+        - devicemapper
+        - overlay
+  BayModelList:
+    description: List of BayModels
+    type: array
+    items:
+      $ref: '#/definitions/BayModel'
+  Certificate:
+    description: API representation of a certificate
+    type: object
+    required:
+    - bay_uuid
+    properties:
+      bay_uuid:
+        type: string
+        description: The bay UUID or ID
+      csr:
+        type: string
+        description: The Certificate Signing Request
+        minLength: 1
+      pem:
+        type: string
+        description: The Signed Certificate
+
+paths:
+  /baymodels:
+    get:
+      description: Retrieve a list of bay models
+      parameters:
+      - name: marker
+        type: string
+        description: The UUID of the resource to start the collection from.
+        format: uuid
+        in: query
+      - name: limit
+        type: integer
+        description: Maximum number of resources to return in a single result
+        in: query
+      - name: sort_key
+        type: string
+        description: Column to sort results by
+        in: query
+        default: id
+      - name: sort_dir
+        type: string
+        description: The direction to sort
+        default: asc
+        enum:
+        - asc
+        - desc
+        in: query
+      responses:
+        200:
+          description: A collection of baymodels
+          schema:
+            $ref: '#/definitions/BayModelList'
+    post:
+      description: Create a new baymodel
+      parameters:
+      - name: baymodel
+        schema:
+          $ref: '#/definitions/BayModel'
+        in: body
+        required: true
+
+      responses:
+        201:
+          description: Baymodel created
+  /baymodels/detail:
+    get:
+      description: Retrieve a list of baymodels with detailed information
+      parameters:
+      - description: Allows filtering the collection according to UUID
+        format: uuid
+        in: query
+        name: baymodel_uuid
+        type: string
+      - description: The UUID of the resource to start the collection from.
+        format: uuid
+        in: query
+        name: marker
+        type: string
+      - description: Maximum number of resources to return in a single result
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Column to sort results by
+        in: query
+        name: sortKey
+        type: string
+      - default: asc
+        description: The direction to sort
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sortDir
+        type: string
+      responses:
+        '200':
+          description: A collection of baymodels
+          schema:
+            $ref: '#/definitions/BayModelList'
+  /baymodels/{identifier}:
+    get:
+      description: Retrieve information about the given baymodel.
+      responses:
+        200:
+          description: A representation of the bay model
+          schema:
+            $ref: '#definitions/BayModel'
+        404:
+          description: Entity was not found
+    delete:
+      description: Permanently deletes a given bay model
+      responses:
+        204:
+          description: The request was accepted for processing
+        404:
+          description: Entity was not found
+  /bays:
+    get:
+      description: Retrieve a list of bays
+      parameters:
+      - name: marker
+        type: string
+        description: The UUID of the resource to start the collection from.
+        format: uuid
+        in: query
+      - name: limit
+        type: integer
+        description: Maximum number of resources to return in a single result
+        in: query
+      - name: sort_key
+        type: string
+        description: Column to sort results by
+        in: query
+        default: id
+      - name: sort_dir
+        type: string
+        default: asc
+        description: The direction to sort
+        enum:
+        - asc
+        - desc
+        in: query
+      responses:
+        200:
+          description: A collection of bays
+          schema:
+            $ref: '#/definitions/BayList'
+    post:
+      description: Create a new bay
+      responses:
+        201:
+          description: Created
+          schema:
+            $ref: '#/definitions/Bay'
+        400:
+          description: The request contained a malformed JSON body
+  /bays/detail:
+    get:
+      description: Retrieve a list of bays with detailed information
+      parameters:
+      - description: Allows filtering the collection according to UUID
+        format: uuid
+        in: query
+        name: bay_uuid
+        type: string
+      - description: The UUID of the resource to start the collection from.
+        format: uuid
+        in: query
+        name: marker
+        type: string
+      - description: Maximum number of resources to return in a single result
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Column to sort results by
+        in: query
+        name: sortKey
+        type: string
+      - default: asc
+        description: The direction to sort
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sortDir
+        type: string
+      responses:
+        200:
+          description: A collection of bays
+          schema:
+            $ref: '#/definitions/BayList'
+  /bays/{identifier}:
+    get:
+      description: Retrieve information about the given bay
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Bay'
+        404:
+          description: Bay not found
+    post:
+      description: Create a new bay
+      responses:
+        201:
+          description: Created
+          schema:
+            $ref: '#/definitions/Bay'
+    delete:
+      description: Permanently deletes a given bay
+      responses:
+        204:
+          description: The request was accepted for processing
+        404:
+          description: Entity was not found
+    patch:
+      description: Update an existing bay.
+      parameters:
+      - in: body
+        name: json_patch_doc
+        required: true
+        schema:
+          description: A JSON patch document to apply to this bay
+          items:
+            description: A JSON patch document as defined by RFC 6902
+            properties:
+              from:
+                description: A JSON Pointer path pointing to the locatoin to move/copy
+                  from.
+                type: string
+              op:
+                description: The operation to be performed
+                enum:
+                - add
+                - remove
+                - replace
+                - move
+                - copy
+                - test
+                type: string
+              path:
+                description: A JSON pointer to the property being affected
+                type: string
+              value:
+                description: The value to add, replace or test.
+            required:
+            - op
+            - path
+          type: array
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#definitions/Bay'
+        400:
+          description: The request contained a malformed JSON body
+        404:
+          description: Entity was not found
+  /certificates:
+    post:
+      description: Sign a new certificate by the CA
+      parameters:
+      - name: certificate
+        schema:
+          $ref: '#/definitions/Certificate'
+        in: body
+        required: true
+      responses:
+        201:
+          description: Certificate created
+  /certificates/{bay_id}:
+    get:
+      description: Retrieve CA information about the given bay
+      parameters:
+      - name: bay_id
+        type: string
+        in: path
+        required: true
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Certificate'

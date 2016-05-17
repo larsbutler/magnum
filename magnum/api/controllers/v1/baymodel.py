@@ -111,12 +111,13 @@ class BayModel(base.APIBase):
        """
 
     no_proxy = wtypes.StringType(min_length=1, max_length=255)
-    """A comma separated list of ips for which proxies should not
+    """A comma separated list of ips for which proxies should not be
        used in the bay
        """
 
     volume_driver = wtypes.StringType(min_length=1, max_length=255)
-    """The name of the driver used for instantiating container volume driver"""
+    """The name of the driver used for instantiating a container volume driver
+       """
 
     registry_enabled = wsme.wsattr(types.boolean, default=False)
     """Indicates whether the docker registry is enabled"""
@@ -125,7 +126,7 @@ class BayModel(base.APIBase):
     """One or more key/value pairs"""
 
     tls_disabled = wsme.wsattr(types.boolean, default=False)
-    """Indicates whether the TLS should be disabled"""
+    """Indicates whether the TLS should be disabled."""
 
     public = wsme.wsattr(types.boolean, default=False)
     """Indicates whether the baymodel is public or not."""
@@ -133,10 +134,10 @@ class BayModel(base.APIBase):
     server_type = wsme.wsattr(wtypes.StringType(min_length=1,
                                                 max_length=255),
                               default='vm')
-    """Server type for this bay model """
+    """Server type for this baymodel."""
 
     insecure_registry = wtypes.StringType(min_length=1, max_length=255)
-    """insecure registry url when create baymodel """
+    """insecure registry URL when creating a baymodel."""
 
     docker_storage_driver = wtypes.Enum(str, *fields.DockerStorageDriver.ALL)
     """Docker storage driver"""

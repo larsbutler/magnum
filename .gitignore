@@ -64,3 +64,9 @@ etc/magnum/magnum.conf.sample
 
 # Files created by releasenotes build
 releasenotes/build
+
+# api-ref build artifacts
+api-ref/build/
+
+# build results
+node_modules/
